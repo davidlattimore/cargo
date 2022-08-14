@@ -1492,11 +1492,19 @@ impl Config {
         }
     }
 
+    fn default_tool_path(&self, tool: &str) -> PathBuf {
+        std::env::current_exe()
+            .ok()
+            .and_then(|exe| exe.parent().map(|exe_dir| exe_dir.join(tool)))
+            .filter(|tool_path| tool_path.exists())
+            .unwrap_or_else(|| PathBuf::from(tool))
+    }
+
     /// Looks for a path for `tool` in an environment variable or config path, defaulting to `tool`
     /// as a path.
     fn get_tool(&self, tool: &str, from_config: &Option<ConfigRelativePath>) -> PathBuf {
         self.maybe_get_tool(tool, from_config)
-            .unwrap_or_else(|| PathBuf::from(tool))
+            .unwrap_or_else(|| self.default_tool_path(tool))
     }
 
     pub fn jobserver_from_env(&self) -> Option<&jobserver::Client> {
